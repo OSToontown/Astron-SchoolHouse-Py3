@@ -121,9 +121,13 @@ find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
 set(USE_32BIT_DATAGRAMS OFF CACHE BOOL
-	"If on, datagrams and dclass fields will use 32-bit length tags instead of 16-bit.")
+	"If on, datagrams will use 32-bit length tags instead of 16-bit.")
 if(USE_32BIT_DATAGRAMS)
 	add_definitions(-DASTRON_32BIT_DATAGRAMS)
+endif()
+set(USE_32BIT_SIZETAGS OFF CACHE BOOL
+	"If on, dclass fields will use 32-bit length tags instead of 16-bit.")
+if(USE_32BIT_SIZETAGS)
 	add_definitions(-DDCLASS_32BIT_SIZETAG)
 endif()
 set(USE_128BIT_CHANNELS OFF CACHE BOOL

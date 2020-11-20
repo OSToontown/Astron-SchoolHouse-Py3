@@ -241,13 +241,18 @@ CONSTANTS = {
 }
 
 if 'USE_32BIT_DATAGRAMS' in os.environ:
-    DATATYPES['size'] = '<I'
+    DATATYPES['dgsize'] = '<I'
     CONSTANTS['DGSIZE_MAX'] = (1 << 32) - 1
     CONSTANTS['DGSIZE_SIZE_BYTES'] = 4
 else:
-    DATATYPES['size'] = '<H'
+    DATATYPES['dgsize'] = '<H'
     CONSTANTS['DGSIZE_MAX'] = (1 << 16) - 1
     CONSTANTS['DGSIZE_SIZE_BYTES'] = 2
+
+if 'USE_32BIT_SIZETAGS' in os.environ:
+    DATATYPES['size'] = '<I'
+else:
+    DATATYPES['size'] = '<H'
 
 if 'USE_128BIT_CHANNELS' in os.environ:
     CONSTANTS['PARENT_PREFIX'] = 1 << 64;
@@ -301,6 +306,10 @@ class Datagram(object):
     def add_blob(self, blob):
         self.add_size(len(blob))
         self.add_raw(blob)
+
+    def add_datagram(self, dg):
+        self.add_dgsize(dg.get_size())
+        self.add_raw(dg.get_data())
 
     def add_channel(self, channel):
         if 'USE_128BIT_CHANNELS' in os.environ:
@@ -396,7 +405,7 @@ class Datagram(object):
         dg = cls.create_control()
         dg.add_uint16(CONTROL_ADD_POST_REMOVE)
         dg.add_channel(sender)
-        dg.add_blob(datagram.get_data())
+        dg.add_datagram(datagram)
         return dg
 
     @classmethod
@@ -503,7 +512,7 @@ class MDConnection(object):
 
     def send(self, datagram):
         data = datagram.get_data()
-        msg = struct.pack(DATATYPES['size'], len(data)) + data
+        msg = struct.pack(DATATYPES['dgsize'], len(data)) + data
         self.s.send(msg)
 
     def recv(self):
@@ -539,7 +548,7 @@ class MDConnection(object):
                 if not data:
                     raise EOFError('Remote socket closed connection')
                 result += data
-            length, = struct.unpack(DATATYPES['size'], result)
+            length, = struct.unpack(DATATYPES['dgsize'], result)
         except socket.error:
             return None
 
