@@ -299,6 +299,11 @@ void Client::close_zones(doid_t parent, const unordered_set<zone_t> &killed_zone
         }
 
         if(killed_zones.find(visible_object.zone) != killed_zones.end()) {
+            if(m_owned_objects.find(visible_object.id) != m_owned_objects.end()) {
+                // Owned objects are always visible, ignore this object
+                continue;
+            }
+
             if(m_session_objects.find(visible_object.id) != m_session_objects.end()) {
                 // This object is a session object. The client should be disconnected.
                 send_disconnect(CLIENT_DISCONNECT_SESSION_OBJECT_DELETED,
